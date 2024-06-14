@@ -1,0 +1,64 @@
+---
+title: "RUN"
+author: "Shingo Nitta"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Import Environment
+
+```{r}
+if (!require("renv")) {
+  install.packages("renv")
+  library(renv)
+}
+renv::restore()
+```
+
+## Import Library
+
+```{r}
+source("work/code/ImportLibrary.R")
+```
+
+## Import Data
+
+```{r}
+source("work/code/ImportData.R")
+```
+
+## Target Population
+
+```{r}
+source("work/code/TargetPopulation.R")
+```
+
+## Feature Engineering
+
+```{r}
+source("work/code/FeatureEngineering.R")
+```
+
+
+## Descriptive Statistics
+
+```{r}
+source("work/code/DescriptiveStatistics.R")
+```
+
+## Model Estimation
+
+```{r}
+source("work/code/ModelEstimation.R")
+```
+
+## Robustness Checks
+
+```{r}
+source("work/code/RobustnessChecks.R")
+```
+

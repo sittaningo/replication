@@ -1,0 +1,14 @@
+# SSM
+d <- haven::read_spss("../data/SSM2015_v070_20170227.sav")
+
+# YearAttributes
+YearAttributes <- readr::read_csv("../data/YearAttributes.csv")
+
+# ONET
+onet <- readr::read_csv("../data/onet.csv") 
+onet_ssm_occ <- readr::read_csv("../data/onet_ssm_occ.csv")
+
+# SSM Occupation
+
+ssm_occ <- readr::read_csv("../data/ssm_en.csv")
+

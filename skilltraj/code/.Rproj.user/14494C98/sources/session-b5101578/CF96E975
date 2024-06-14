@@ -1,0 +1,28 @@
+{
+    "id": "CF96E975",
+    "path": "~/work/code/ModelEstimation.R",
+    "project_path": "ModelEstimation.R",
+    "type": "r_source",
+    "hash": "0",
+    "contents": "",
+    "dirty": true,
+    "created": 1717036604243.0,
+    "source_on_save": false,
+    "relative_order": 2,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "docOutlineVisible": "1",
+        "cursorPosition": "230,0",
+        "scrollLine": "215",
+        "softWrapLines": "true"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1718346056,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1718346196289,
+    "read_only": false,
+    "read_only_alternatives": []
+}

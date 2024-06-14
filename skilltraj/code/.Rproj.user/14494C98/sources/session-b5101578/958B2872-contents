@@ -1,0 +1,149 @@
+Py <- Py |> dplyr::filter(Age >= 20)
+
+Py_filtered <- Py |> 
+  dplyr::select(id, Age, Anal, Female, Edu, GDP, UnempRate) |> 
+  dplyr::mutate(Age = labelled::unlabelled(Age)) |> 
+  jtools::gscale(vars = "Anal", n.sd = 1) |> 
+  tidyr::drop_na()
+
+# Descriptive Statistics----
+
+DescriptiveStatistics <- modelsummary::datasummary(Anal + Age + Female + Edu + GDP + UnempRate + 1 ~ N + Percent() + Mean + SD,
+                                                   data = Py_filtered,
+                                                   output = "markdown")
+
+# ONET Item----
+
+OnetItem <- tibble(Skill = c("Analytical", "", "", ""), 
+                   Item = c("Active Learning", "Critical Thinking", "Learning Strategies", "Complex Problem Solving")) |> 
+  knitr::kable(format = "markdown")
+
+# Skill Ranking----
+
+SkillRank_Prepare <- Py |> 
+  dplyr::select(occ, Anal) |>
+  dplyr::group_by(occ) |>
+  dplyr::mutate(n = n()) |> 
+  dplyr::ungroup() |> 
+  dplyr::distinct(occ, .keep_all = TRUE)
+
+# Analytical
+SkillRank <- SkillRank_Prepare |> 
+  dplyr::select(occ, Anal) |> 
+  dplyr::slice_max(Anal, n = 5) |> 
+  dplyr::mutate(Rank = 1:5)
+
+SkillRank <- SkillRank_Prepare |> 
+  dplyr::select(occ, Anal) |> 
+  dplyr::slice_min(Anal, n = 5) |> 
+  dplyr::mutate(Rank = 10:6) |> 
+  dplyr::bind_rows(SkillRank)
+
+# Tidy
+
+ssm_occ <- ssm_occ |> 
+  dplyr::rename(ssm_occnum = ssm)
+
+onet_ssm_occ <- ssm_occ |> 
+  (\(.) dplyr::left_join(onet_ssm_occ, ., by = "ssm_occnum"))()
+
+SkillRank <- onet_ssm_occ |> 
+  dplyr::select(ssm_occnum, title_en) |> 
+  dplyr::rename(occ = ssm_occnum, Occ = title_en) |>
+  (\(.) dplyr::inner_join(., SkillRank, by = "occ"))()
+
+SkillRank_out <- SkillRank |> 
+  dplyr::select(-occ) |> 
+  dplyr::mutate(Occ = stringr::str_to_title(Occ, locale = "en"), 
+                Score = round(Anal, 2)
+                ) |>
+  dplyr::select(Occ, Score) |> 
+  dplyr::arrange(-Score) |> 
+  tidyr::drop_na() |> 
+  dplyr::distinct(.keep_all = TRUE)
+
+SkillRank_out |>
+  knitr::kable(format = "markdown")
+
+# Transiton Rate ----
+
+## Overall ----
+
+Py |> 
+  dplyr::select(id, dansu, Age) |> 
+  dplyr::group_by(id) |> 
+  dplyr::mutate(dansu_lagged = dplyr::lag(dansu), 
+            is_Transition = dplyr::if_else(dansu != dansu_lagged, 1, 0)) |> 
+  dplyr::ungroup() |> 
+  tidyr::drop_na() |> 
+  dplyr::filter(Age > 20) |> 
+  dplyr::summarise(TransitionRate = sum(is_Transition) / n(), .by = Age) |> 
+  ggplot2::ggplot(aes(x = Age, y = TransitionRate, group = 1)) +
+  ggplot2::geom_point() + 
+  ggplot2::geom_line() + 
+  ggplot2::geom_smooth(method = "loess", color = "black") + 
+  ggplot2::theme_minimal(base_family = "SourceHanSans-Regular") + 
+  ggplot2::theme(legend.position = "top", 
+                 legend.title = element_blank())
+
+## Gender ----
+
+Py |> 
+  dplyr::select(id, dansu, Age, Female) |> 
+  dplyr::group_by(id) |> 
+  dplyr::mutate(dansu_lagged = dplyr::lag(dansu), 
+                is_Transition = dplyr::if_else(dansu != dansu_lagged, 1, 0)) |> 
+  dplyr::ungroup() |> 
+  tidyr::drop_na() |> 
+  dplyr::filter(Age > 20) |> 
+  dplyr::summarise(TransitionRate = sum(is_Transition) / n(), .by = c(Age, Female)) |> 
+  ggplot2::ggplot(aes(x = Age, y = TransitionRate, group = Female, color = Female)) +
+  ggplot2::geom_point() + 
+  ggplot2::geom_line() + 
+  ggplot2::geom_smooth(method = "loess") + 
+  ggplot2::scale_color_manual(values = met.brewer("Kandinsky", 2, type = "discrete")) + 
+  ggplot2::theme_minimal(base_family = "SourceHanSans-Regular") + 
+  ggplot2::theme(legend.position = "top", 
+                 legend.title = element_blank())
+
+## Education ----
+
+Py |> 
+  dplyr::select(id, dansu, Age, Edu) |> 
+  dplyr::group_by(id) |> 
+  dplyr::mutate(dansu_lagged = dplyr::lag(dansu), 
+                is_Transition = dplyr::if_else(dansu != dansu_lagged, 1, 0)) |> 
+  dplyr::ungroup() |> 
+  tidyr::drop_na() |> 
+  dplyr::filter(Age > 20) |> 
+  dplyr::summarise(TransitionRate = sum(is_Transition) / n(), .by = c(Age, Edu)) |> 
+  ggplot2::ggplot(aes(x = Age, y = TransitionRate, group = Edu, shape = Edu)) +
+  ggplot2::geom_point() + 
+  ggplot2::geom_line() + 
+  # ggplot2::geom_smooth(method = "loess", color = "black") + 
+  ggplot2::scale_color_manual(values = met.brewer("Kandinsky", 2, type = "discrete")) + 
+  ggplot2::theme_minimal(base_family = "SourceHanSans-Regular") + 
+  ggplot2::theme(legend.position = "top", 
+                 legend.title = element_blank()) + 
+  ggplot2::scale_shape_manual(values=c(17, 16))
+
+## Education ----
+
+Py |> 
+  dplyr::select(id, dansu, Age, Female, Edu) |> 
+  dplyr::group_by(id) |> 
+  dplyr::mutate(dansu_lagged = dplyr::lag(dansu), 
+                is_Transition = dplyr::if_else(dansu != dansu_lagged, 1, 0)) |> 
+  dplyr::ungroup() |> 
+  tidyr::drop_na() |> 
+  dplyr::filter(Age > 20) |> 
+  dplyr::summarise(TransitionRate = sum(is_Transition) / n(), .by = c(Age, Edu, Female)) |> 
+  ggplot2::ggplot(aes(x = Age, y = TransitionRate, group = paste0(Female, Edu), shape = Edu, color = Female)) +
+  ggplot2::geom_point() + 
+  ggplot2::geom_line() + 
+  # ggplot2::geom_smooth(method = "loess") + 
+  ggplot2::scale_color_manual(values = met.brewer("Kandinsky", 2, type = "discrete")) + 
+  ggplot2::theme_minimal(base_family = "SourceHanSans-Regular") + 
+  ggplot2::theme(legend.position = "top", 
+                 legend.title = element_blank()) + 
+  ggplot2::scale_shape_manual(values=c(17, 16))
