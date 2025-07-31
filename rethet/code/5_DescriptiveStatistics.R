@@ -1,0 +1,5 @@
+# Rename Features ----
+
+DescriptiveStatistics <- harmonized_target |> 
+  (\(.)modelsummary::datasummary(`Subjective Health` + is_retirement + `Birth cohort` + Age + Female + `Marital status` + `Number of living siblings` + `Survey year` + `Self-employment` + `Weekly working hours` + `Education` + `Number of Living Parents` + `Age(father)` + `Age(mother)` + `Net worth` + `Household income` + `Transfer to grandchildren` + `Total household number` + `Number of living children` ~ 1 + Percent() + Mean + SD + min + max, data = ., output = 'markdown'))()
+

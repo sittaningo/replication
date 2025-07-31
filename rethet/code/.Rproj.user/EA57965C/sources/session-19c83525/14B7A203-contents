@@ -1,0 +1,45 @@
+# Import Original Harmonized Data ----
+
+## HRS ----
+hrs <- haven::read_dta("../data/HRS/H_HRS_d.dta") |> 
+  haven::zap_labels() |> 
+  dplyr::mutate(survey = "HRS")
+
+## SHARE ----
+share <- haven::read_dta("../data/SHARE/H_SHARE_f2.dta") |> dplyr::mutate(survey = "SHARE")
+
+## ELSA ----
+elsa <- haven::read_dta("../data/ELSA/h_elsa_g3.dta") |> 
+  haven::zap_labels() |> 
+  dplyr::mutate(survey = "ELSA")
+
+## MHAS ----
+mhas <- haven::read_dta("../data/MHAS/H_MHAS_c2.dta") |> 
+  haven::zap_labels() |> 
+  dplyr::mutate(survey = "MHAS")
+
+## CRELES ----
+creles <- haven::read_dta("../data/CRELES/H_CRELES.dta") |> 
+  haven::zap_labels() |> 
+  dplyr::mutate(survey = "CRELES")
+
+## LASI ----
+lasi <- haven::read_dta("../data/LASI/H_LASI_a3.dta") |> 
+  haven::zap_labels() |> 
+  dplyr::mutate(survey = "LASI")
+
+## CHARLS ----
+charls <- haven::read_dta("../data/CHARLS/H_CHARLS_D_Data.dta") |> 
+  haven::zap_labels() |> 
+  dplyr::mutate(survey = "CHARLS")
+
+## KLoSA ----
+klosa <- haven::read_dta("../data/KLoSA/H_KLoSA_e2.dta") |> 
+  haven::zap_labels() |> 
+  dplyr::mutate(survey = "KLoSA")
+
+# Integrate Data ----
+
+harmonized <- hrs |> dplyr::bind_rows(elsa)
+
+

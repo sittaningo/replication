@@ -1,0 +1,4 @@
+# Rename Features ----
+
+DescriptiveStatistics <- harmonized_target |> 
+  (\(.)modelsummary::datasummary(subjective_health_lead + is_retirement + ragender + rabyear + marital_status + public_pension_income + income_government_transfer + living_siblings + is_selfemployed + weekly_working_hours + subjective_health + ipw ~ 1 + Percent() + Mean + SD + min + max, data = ., output = 'markdown'))()

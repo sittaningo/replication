@@ -1,0 +1,72 @@
+hist(klosa$r2atotb)
+
+harmonized_target |> dplyr::group_by(survey) |> count()
+
+
+table(harmonized_longer$survey, harmonized_longer$totalwealth, useNA = "always")
+
+table(harmonized_longer$survey, harmonized_longer$totalwealth, useNA = "always")
+
+harmonized_longer |> 
+  select(living_children, survey) |> 
+  dplyr::summarise(narate = sum(is.na(living_children)) / length(living_children), .by = survey)
+
+
+colnames(harmonized_longer)
+
+
+## SHARE ----
+hrs <- haven::read_dta(file = "../data/RAND_HRS/randhrs1992_2020v2.dta")
+mhas <- haven::read_dta(file = "../data/MHAS/H_MHAS_c2.dta")
+share <- haven::read_dta(file = "../data/SHARE/H_SHARE_f2.dta")
+elsa <- haven::read_dta(file = "../data/ELSA/h_elsa_g3.dta")
+klosa <- haven::read_dta(file = "../data/KLoSA/H_KLoSA_e2.dta")
+charls <- haven::read_dta(file = "../data/CHARLS/H_CHARLS_D_Data.dta")
+
+table(klosa$rabplace)
+
+table(hrs$hhid)
+table(mhas$unhhid)
+table(share$hhid)
+table(elsa$hh2hhid)
+table(klosa$hhid)
+table(charls$hhid)
+
+class(hrs$hhid)
+class(mhas$h2hhid)
+class(share$hhid)
+class(elsa$hh2hhid)
+class(klosa$hhid)
+class(charls$hhid)
+
+View(elsa)
+
+table(share$hh4hhres)
+table(harmonized_longer$survey, harmonized_longer$household_number)
+
+
+# table(TEST$survey, TEST$transfer_to_grandchildren)
+table(harmonized_longer$survey, harmonized_longer$subjective_health)
+
+# living_children -> ELSA
+# household_number -> SHARE
+# housing_value -> KLoSA
+# household_capital_income -> CHARLS/KLoSA
+
+harmonized_longer |> 
+  dplyr::summarise(mean(living_children, na.rm = TRUE), .by = survey)
+
+harmonized_longer |> 
+  dplyr::summarise(sum(is.na(living_children), na.rm = TRUE) / sum((is.na(living_children) + !is.na(living_children)), na.rm = TRUE), .by = survey)
+
+harmonized_longer |> 
+  dplyr::summarise(sum(is.na(weekly_working_hours), na.rm = TRUE) / sum((is.na(weekly_working_hours) + !is.na(weekly_working_hours)), na.rm = TRUE), .by = survey)
+
+# housing_value, household_capital_income, household_number, living_children
+# HwATOTB
+
+d <- harmonized_longer |> 
+  dplyr::filter(Age >= 60 & Age <= 89) |> 
+  dplyr::select(rabyear, Age, country, totalwealth, panelweight, survey_year)
+
+table(d$country, d$survey_year)  

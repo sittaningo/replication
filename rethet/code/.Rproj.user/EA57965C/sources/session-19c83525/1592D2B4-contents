@@ -1,0 +1,48 @@
+# Construct IPW ----
+#TODO 未完成
+
+ipw <- 
+  glm(is_retirement ~ subjective_health + rabyear + ragender + marital_status + public_pension_income + income_government_transfer + living_siblings,
+      family=binomial(link = "logit"), 
+      data = harmonized_train) |> 
+  predict(newx = predict, 
+          type = "response") |> 
+  dplyr::mutate(ipw = 1/value) |> # ここでエラーが出ている
+  dplyr::select(-value)
+
+# Estimate ATE ----
+
+lm(subjective_health_lead ~ is_retirement + subjective_health + rabyear + ragender + marital_status + public_pension_income + income_government_transfer + living_siblings, data = harmonized_target) |> modelsummary(stars = TRUE)
+
+# Construct Tree ----
+
+CausalTree <- htetree::causalTree(formula = `Subjective Health` ~ `Birth cohort` + Age + Female + `Marital status` + `Number of living siblings` + survey_year + is_selfemployed + weekly_working_hours, 
+                                  data = harmonized_target, 
+                                  treatment = harmonized_target$is_retirement, 
+                                  split.Rule = "CT", 
+                                  cv.option = "CT",
+                                  maxdepth = 4,
+                                  split.Honest = TRUE, cv.Honest = TRUE, split.Bucket = FALSE)
+
+opcp <- CausalTree$cptable[,1][which.min((CausalTree$cptable[,4]))]
+opfit <- prune(CausalTree, opcp)
+
+rpart.plot(opfit)
+
+# + `Public pension income` + `Individual income from other government transfers` + survey
+
+# Feature Importance ----
+
+htetree::importance(CausalTree)
+
+importance <- htetree::importance(CausalTree) |> tidyr::as_tibble() |> 
+  dplyr::mutate(features = c("Age", "Birth cohort", "Weekly working hours", "Number of living siblings", "Marital status", "Survey year", "Female", "Self employment"))
+
+importance |> 
+  dplyr::mutate(features = fct_reorder(features, desc(-value))) |> 
+  ggplot2::ggplot(aes(x = features, y = value)) + 
+  ggplot2::geom_point(size = 2) + 
+  ggplot2::coord_flip() + 
+  ggplot2::theme_minimal(base_size = 18, 
+                         base_family = "SourceHanSans-Regular") + 
+  ggplot2::ylab("")

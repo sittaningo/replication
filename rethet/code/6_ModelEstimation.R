@@ -1,0 +1,58 @@
+# Construct Tree ----
+
+## Subjective Health ----
+
+### Causal Tree ----
+
+CausalTree_subjhealth <- htetree::causalTree(formula = `Subjective Health` ~ `Birth cohort` + Age + `Survey year` + Female + `Marital status` + `Number of living siblings` + `Self-employment` + `Weekly working hours` + Education + `Number of Living Parents` + `Age(father)` + `Age(mother)` + `Net worth` + `Household income` + `Transfer to grandchildren` + `Total household number` + `Number of living children`, 
+                                             data = harmonized_target, 
+                                             weights = ipw,
+                                             treatment = harmonized_target$is_retirement, 
+                                             split.Rule = "CT",
+                                             cv.option = "CT",
+                                             split.Honest = TRUE, 
+                                             cv.Honest = TRUE, 
+                                             split.Bucket = FALSE, 
+                                             maxdepth = 3,
+                                             minsplit = 3000,
+                                             minbucket = 1000)
+
+
+#### Data Visularization ----
+opcp <- CausalTree_subjhealth$cptable[,1][which.min((CausalTree_subjhealth$cptable[,4]))]
+opfit <- prune(CausalTree_subjhealth, opcp)
+
+rpart.plot(opfit, box.palette = met.brewer("OKeeffe2", direction = 1, type = "continuous"), family = "SourceHanSans-Regular", digits = -3, cex = 1)
+
+### Feature Importance ----
+
+CausalTree_subjhealth_importance <- htetree::causalTree(formula = `Subjective Health` ~ `Birth cohort` + Age + `Survey year` + Female + `Marital status` + `Number of living siblings` + `Self-employment` + `Weekly working hours` + Education + `Number of Living Parents` + `Age(father)` + `Age(mother)` + `Net worth` + `Household income` + `Transfer to grandchildren` + `Total household number` + `Number of living children`, 
+                                                        data = harmonized_target, 
+                                                        weights = ipw,
+                                                        treatment = harmonized_target$is_retirement, 
+                                                        split.Rule = "CT",
+                                                        cv.option = "CT",
+                                                        split.Honest = TRUE, 
+                                                        cv.Honest = TRUE, 
+                                                        split.Bucket = FALSE,
+                                                        maxdepth = 30,
+                                                        minsplit = 3000, 
+                                                        minbucket = 1000)
+
+
+opcp <- CausalTree_subjhealth_importance$cptable[,1][which.min((CausalTree_subjhealth_importance$cptable[,4]))]
+opfit <- prune(CausalTree_subjhealth_importance, opcp)
+
+importance_subjehealth <- tidyr::tibble(value = opfit$variable.importance, 
+                                        feature = attr(opfit$variable.importance, "names"))
+
+
+#### Data Visualization ----
+
+importance_subjehealth |> 
+  dplyr::mutate(feature = fct_reorder(feature, desc(-value))) |> 
+  ggplot2::ggplot(aes(x = feature, y = (value) * 10^-11)) + 
+  ggplot2::geom_point(size = 2) + 
+  ggplot2::coord_flip() + 
+  ggplot2::theme_minimal(base_size = 18) + 
+  ggplot2::ylab("")

@@ -1,0 +1,32 @@
+harmonized_longer |> glimpse()
+
+d <- harmonized_longer |> 
+  dplyr::filter(Age >= 60 & Age <= 89) |> 
+  dplyr::select(rabyear, Age, country, totalwealth, panelweight) |> 
+  dplyr::mutate(Cohort = dplyr::case_match(rabyear, 
+                                           1903:1909 ~ "1903-09", 
+                                           1910:1919 ~ "1910-19", 
+                                           1920:1929 ~ "1920-29", 
+                                           1930:1939 ~ "1930-39", 
+                                           1940:1949 ~ "1940-49", 
+                                           1950:1959 ~ "1950-58", 
+                                           .default = NA_character_), 
+                Age = dplyr::case_match(Age,
+                                        60:64 ~ "60-64", 
+                                        65:69 ~ "65-69", 
+                                        70:74 ~ "70-74", 
+                                        75:79 ~ "75-79", 
+                                        80:84~ "80-84", 
+                                        85:89~ "85-89", 
+                                        .default = NA_character_)) |> 
+  tidyr::drop_na() |> 
+  dplyr::summarise(Wealth = weighted.mean(totalwealth, panelweight, na.rm = TRUE), .by = c(Cohort, Age, country))
+
+d |> 
+  dplyr::filter(country == "US" | country == "UK" | country == "Germany" | country == "China" | country == "Korea" | country == "Sweden" | country == "Denmark" | country == "Netherlands" | country == "Finland" | country == "Czech Republic" | country == "Belglum" | country == "Spain" | country == "Switzerland") |>
+  ggplot2::ggplot(aes(x = Age, y = Wealth, color = Cohort, group = Cohort)) + 
+  ggplot2::geom_point() + 
+  ggplot2::geom_line() + 
+  ggplot2::facet_wrap(~ country, scales = "free")
+  
+table(harmonized_longer$rabyear)

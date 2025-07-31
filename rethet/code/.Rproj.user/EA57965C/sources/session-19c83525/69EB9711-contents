@@ -1,0 +1,171 @@
+# Import Original Harmonized Data ----
+
+## RandHRS ----
+rand_hrs <- haven::read_dta(file = "../data/RAND_HRS/randhrs1992_2020v2.dta", 
+                            col_select = (c(
+                              (starts_with("r") & ends_with("shlt")), # subjective health
+                              (starts_with("r") & ends_with("retemp")), # retirement
+                              rabyear, ragender, # sociodemographic attributes
+                              (starts_with("r") & ends_with("agey_b")), # age at interview
+                              (starts_with("r") & ends_with("mstat")), # marital status
+                              (starts_with("h") & ends_with("ahous")), # primary housing
+                              (starts_with("h") & ends_with("icap")), # household capital income
+                              (starts_with("r") & ends_with("igxfr")), # Individual Income from Other Government Transfers
+                              (starts_with("h") & ends_with("hhres")), # Number of people
+                              (starts_with("h") & ends_with("child")), # Living children
+                              (starts_with("r") & ends_with("livsib")), # Living siblings
+                              (starts_with("r") & ends_with("slfemp")), # Whether self-employed
+                              (starts_with("r") & ends_with("jhours")), # Hours of work per week at main job
+                              (starts_with("r") & ends_with("tr20")) # Word Recall
+                              ))
+                            ) |> 
+  haven::zap_labels() |> 
+  dplyr::mutate(survey = "RAND_HRS")
+
+  # adl, educl, rural, pubpen, Transfers to children/grandchildren, Orientation to Time
+  
+  
+## SHARE ----
+share <- haven::read_dta("../data/SHARE/H_SHARE_f2.dta", 
+                         col_select = (c(
+                           (starts_with("r") & ends_with("adltot")), # ADL summary
+                           (starts_with("r") & ends_with("shlt")), # subjective health
+                           (starts_with("r") & ends_with("retemp")), # retirement
+                           rabyear, ragender, raeducl, # sociodemographic attributes
+                           (starts_with("r") & ends_with("agey_b")), # age at interview
+                           (starts_with("h") & ends_with("rural")), # rural area
+                           (starts_with("r") & ends_with("mstat")), # marital status
+                           (starts_with("h") & ends_with("ahous")), # primary housing
+                           (starts_with("h") & ends_with("icap")), # household capital income
+                           (starts_with("r") & ends_with("igxfr")), # Individual Income from Other Government Transfers
+                           (starts_with("r") & ends_with("pubpen")), # All Public Pension Income
+                           (starts_with("h") & ends_with("tcany")), # Transfers to children/grandchildren
+                           (starts_with("h") & ends_with("hhres")), # Number of people
+                           (starts_with("h") & ends_with("child")), # Living children
+                           (starts_with("r") & ends_with("livsib")), # Living siblings
+                           (starts_with("r") & ends_with("slfemp")), # Whether self-employed
+                           (starts_with("r") & ends_with("jhours")), # Hours of work per week at main job
+                           (starts_with("r") & ends_with("tr20")), # Word Recall
+                           (starts_with("r") & ends_with("orient")) # Orientation to Time
+                         ))
+                         ) |> 
+  haven::zap_labels() |> 
+  dplyr::mutate(survey = "SHARE")
+
+## ELSA ----
+elsa <- haven::read_dta("../data/ELSA/h_elsa_g3.dta", 
+                        col_select = (c(
+                          (starts_with("r") & ends_with("adltot")), # ADL summary
+                          (starts_with("r") & ends_with("shlt")), # subjective health
+                          (starts_with("r") & ends_with("retemp")), # retirement
+                          rabyear, ragender, raeducl, # sociodemographic attributes
+                          (starts_with("r") & ends_with("agey_b")), # age at interview
+                          (starts_with("h") & ends_with("rural")), # rural area
+                          (starts_with("r") & ends_with("mstat")), # marital status
+                          (starts_with("h") & ends_with("ahous")), # primary housing
+                          (starts_with("h") & ends_with("icap")), # household capital income
+                          (starts_with("r") & ends_with("igxfr")), # Individual Income from Other Government Transfers
+                          (starts_with("r") & ends_with("pubpen")), # All Public Pension Income
+                          (starts_with("h") & ends_with("tcany")), # Transfers to children/grandchildren
+                          (starts_with("h") & ends_with("hhres")), # Number of people
+                          (starts_with("h") & ends_with("child")), # Living children
+                          (starts_with("r") & ends_with("livsib")), # Living siblings
+                          (starts_with("r") & ends_with("slfemp")), # Whether self-employed
+                          (starts_with("r") & ends_with("jhours")), # Hours of work per week at main job
+                          (starts_with("r") & ends_with("tr20")), # Word Recall
+                          (starts_with("r") & ends_with("orient")) # Orientation to Time
+                        ))) |> 
+  haven::zap_labels() |> 
+  dplyr::mutate(survey = "ELSA")
+
+## MHAS ----
+mhas <- haven::read_dta("../data/MHAS/H_MHAS_c2.dta", 
+                        col_select = (c(
+                          (starts_with("r") & ends_with("adltot")), # ADL summary
+                          (starts_with("r") & ends_with("shlt")), # subjective health
+                          (starts_with("r") & ends_with("retemp")), # retirement
+                          rabyear, ragender, raeducl, # sociodemographic attributes
+                          (starts_with("r") & ends_with("agey_b")), # age at interview
+                          (starts_with("h") & ends_with("rural")), # rural area
+                          (starts_with("r") & ends_with("mstat")), # marital status
+                          (starts_with("h") & ends_with("ahous")), # primary housing
+                          (starts_with("h") & ends_with("icap")), # household capital income
+                          (starts_with("r") & ends_with("igxfr")), # Individual Income from Other Government Transfers
+                          (starts_with("r") & ends_with("pubpen")), # All Public Pension Income
+                          (starts_with("h") & ends_with("tcany")), # Transfers to children/grandchildren
+                          (starts_with("h") & ends_with("hhres")), # Number of people
+                          (starts_with("h") & ends_with("child")), # Living children
+                          (starts_with("r") & ends_with("livsib")), # Living siblings
+                          (starts_with("r") & ends_with("slfemp")), # Whether self-employed
+                          (starts_with("r") & ends_with("jhours")), # Hours of work per week at main job
+                          (starts_with("r") & ends_with("tr20")), # Word Recall
+                          (starts_with("r") & ends_with("orient")) # Orientation to Time
+                        ))) |> 
+  haven::zap_labels() |> 
+  dplyr::mutate(survey = "MHAS")
+
+## CHARLS ----
+charls <- haven::read_dta("../data/CHARLS/H_CHARLS_D_Data.dta", 
+                          col_select = (c(
+                            (starts_with("r") & ends_with("adltot")), # ADL summary
+                            (starts_with("r") & ends_with("shlt")), # subjective health
+                            (starts_with("r") & ends_with("retemp")), # retirement
+                            rabyear, ragender, raeducl, # sociodemographic attributes
+                            (starts_with("r") & ends_with("agey_b")), # age at interview
+                            (starts_with("h") & ends_with("rural")), # rural area
+                            (starts_with("r") & ends_with("mstat")), # marital status
+                            (starts_with("h") & ends_with("ahous")), # primary housing
+                            (starts_with("h") & ends_with("icap")), # household capital income
+                            (starts_with("r") & ends_with("igxfr")), # Individual Income from Other Government Transfers
+                            (starts_with("r") & ends_with("pubpen")), # All Public Pension Income
+                            (starts_with("h") & ends_with("tcany")), # Transfers to children/grandchildren
+                            (starts_with("h") & ends_with("hhres")), # Number of people
+                            (starts_with("h") & ends_with("child")), # Living children
+                            (starts_with("r") & ends_with("livsib")), # Living siblings
+                            (starts_with("r") & ends_with("slfemp")), # Whether self-employed
+                            (starts_with("r") & ends_with("jhours")), # Hours of work per week at main job
+                            (starts_with("r") & ends_with("tr20")), # Word Recall
+                            (starts_with("r") & ends_with("orient")) # Orientation to Time
+                          ))) |> 
+  haven::zap_labels() |> 
+  dplyr::mutate(survey = "CHARLS")
+
+## KLoSA ----
+klosa <- haven::read_dta("../data/KLoSA/H_KLoSA_e2.dta", 
+                         col_select = (c(
+                           (starts_with("r") & ends_with("adltot")), # ADL summary
+                           (starts_with("r") & ends_with("shlt")), # subjective health
+                           (starts_with("r") & ends_with("retemp")), # retirement
+                           rabyear, ragender, raeducl, # sociodemographic attributes
+                           (starts_with("r") & ends_with("agey_b")), # age at interview
+                           (starts_with("h") & ends_with("rural")), # rural area
+                           (starts_with("r") & ends_with("mstat")), # marital status
+                           (starts_with("h") & ends_with("ahous")), # primary housing
+                           (starts_with("h") & ends_with("icap")), # household capital income
+                           (starts_with("r") & ends_with("igxfr")), # Individual Income from Other Government Transfers
+                           (starts_with("r") & ends_with("pubpen")), # All Public Pension Income
+                           (starts_with("h") & ends_with("tcany")), # Transfers to children/grandchildren
+                           (starts_with("h") & ends_with("hhres")), # Number of people
+                           (starts_with("h") & ends_with("child")), # Living children
+                           (starts_with("r") & ends_with("livsib")), # Living siblings
+                           (starts_with("r") & ends_with("slfemp")), # Whether self-employed
+                           (starts_with("r") & ends_with("jhours")), # Hours of work per week at main job
+                           (starts_with("r") & ends_with("tr20")), # Word Recall
+                           (starts_with("r") & ends_with("orient")) # Orientation to Time
+                         ))) |> 
+  haven::zap_labels() |> 
+  dplyr::mutate(survey = "KLoSA")
+
+# Integrate Data ----
+
+harmonized <- rand_hrs |> 
+  dplyr::bind_rows(share) |> 
+  dplyr::bind_rows(mhas) |> 
+  dplyr::bind_rows(elsa) |> 
+  dplyr::bind_rows(charls) |> 
+  dplyr::bind_rows(klosa) |> 
+  dplyr::mutate(id = row_number())
+
+# Sums of # must be 272352
+
+seeallvar <- haven::read_dta("../data/KLoSA/H_KLoSA_e2.dta")

@@ -1,0 +1,112 @@
+# Weight ----
+harmonized_longer <- harmonized |>
+  dplyr::select(id, (starts_with("r") & ends_with("wtresp"))) |>
+  tidyr::pivot_longer(cols = (starts_with("r") & ends_with("wtresp")),
+                      names_to = "wave",
+                      values_to = "panelweight_a") |>
+  dplyr::mutate(wave = readr::parse_number(wave)) |>
+  tidyr::drop_na(wave) |>
+  dplyr::select(id, wave, panelweight_a) |>
+  dplyr::distinct(pick(id, wave), .keep_all = TRUE) |> 
+  (\(.) dplyr::left_join(harmonized_longer, ., by = c("id", "wave")))()
+
+harmonized_longer <- harmonized |>
+  dplyr::select(id, (starts_with("r") & ends_with("lwtresp"))) |>
+  tidyr::pivot_longer(cols = (starts_with("r") & ends_with("lwtresp")),
+                      names_to = "wave",
+                      values_to = "panelweight_b") |>
+  dplyr::mutate(wave = readr::parse_number(wave)) |>
+  tidyr::drop_na(wave) |>
+  dplyr::select(id, wave, panelweight_b) |>
+  (\(.) dplyr::left_join(harmonized_longer, ., by = c("id", "wave")))()
+
+harmonized_longer <- harmonized |>
+  dplyr::select(id, (starts_with("r") & ends_with("wtrespl"))) |>
+  tidyr::pivot_longer(cols = (starts_with("r") & ends_with("wtrespl")),
+                      names_to = "wave",
+                      values_to = "panelweight_c") |>
+  dplyr::mutate(wave = readr::parse_number(wave)) |>
+  tidyr::drop_na(wave) |>
+  dplyr::select(id, wave, panelweight_c) |>
+  dplyr::distinct(pick(id, wave), .keep_all = TRUE) |> 
+  (\(.) dplyr::left_join(harmonized_longer, ., by = c("id", "wave")))()
+
+harmonized_longer <- harmonized_longer |>
+  dplyr::mutate(panelweight = dplyr::case_when(survey == "ELSA" | survey == "KLoSA" ~ panelweight_b, 
+                                               survey == "CHARLS" ~ panelweight_c, 
+                                               TRUE ~ panelweight_a)) |>
+  dplyr::select(-panelweight_a, -panelweight_b, -panelweight_c)
+
+# Cohort ----
+d <- harmonized_longer |> 
+  dplyr::filter(Age >= 60 & Age <= 89) |> 
+  dplyr::select(rabyear, Age, country, totalwealth, panelweight) |> 
+  dplyr::mutate(Cohort = dplyr::case_match(rabyear, 
+                                           1903:1909 ~ "1903-09", 
+                                           1910:1919 ~ "1910-19", 
+                                           1920:1929 ~ "1920-29", 
+                                           1930:1939 ~ "1930-39", 
+                                           1940:1949 ~ "1940-49", 
+                                           1950:1958 ~ "1950-58", 
+                                           .default = NA_character_), 
+                Age = dplyr::case_match(Age,
+                                        60:64 ~ "60-64", 
+                                        65:69 ~ "65-69", 
+                                        70:74 ~ "70-74", 
+                                        75:79 ~ "75-79", 
+                                        80:84 ~ "80-84", 
+                                        85:89 ~ "85-89", 
+                                        .default = NA_character_)) |> 
+  tidyr::drop_na() |> 
+  dplyr::summarise(Wealth = weighted.mean(totalwealth, panelweight, na.rm = TRUE), 
+                   n = length(totalwealth),
+                   .by = c(Cohort, Age, country)) |> 
+  dplyr::filter(n > 50)
+
+# Viz ----
+d |> 
+  dplyr::filter(country == "US" | country == "UK" | country == "Germany" | country == "China" | country == "Korea" | country == "Sweden" | country == "Italy" | country == "Netherlands" | country == "Finland" | country == "France" | country == "Spain" | country == "Poland") |>
+  ggplot2::ggplot(aes(x = Age, y = Wealth, color = Cohort, group = Cohort)) + 
+  ggplot2::geom_point(size = 2) + 
+  ggplot2::geom_line(size = 1.1) + 
+  ggplot2::facet_wrap(~ country) + 
+  ggplot2::theme_minimal(base_family = "SourceHanSans-Regular") + 
+  ggplot2::scale_color_manual(values = met.brewer("Klimt"))
+
+# Gini ----
+
+d_gini <- harmonized_longer |> 
+  dplyr::filter(Age >= 60 & Age <= 89) |> 
+  dplyr::select(rabyear, Age, country, totalwealth, panelweight) |> 
+  dplyr::mutate(Cohort = dplyr::case_match(rabyear, 
+                                           1903:1909 ~ "1903-09", 
+                                           1910:1919 ~ "1910-19", 
+                                           1920:1929 ~ "1920-29", 
+                                           1930:1939 ~ "1930-39", 
+                                           1940:1949 ~ "1940-49", 
+                                           1950:1958 ~ "1950-58", 
+                                           .default = NA_character_), 
+                Age = dplyr::case_match(Age,
+                                        60:64 ~ "60-64", 
+                                        65:69 ~ "65-69", 
+                                        70:74 ~ "70-74", 
+                                        75:79 ~ "75-79", 
+                                        80:84 ~ "80-84", 
+                                        85:89 ~ "85-89", 
+                                        .default = NA_character_)) |> 
+  tidyr::drop_na() |> 
+  dplyr::summarise(Gini = (((length(totalwealth))/2) - sum(cumsum(totalwealth[order(totalwealth, decreasing = FALSE)]) / sum(totalwealth[order(totalwealth, decreasing = FALSE)]))) / ((length(totalwealth))/2), 
+                   n = length(totalwealth),
+                   .by = c(Cohort, Age, country)) |> 
+  dplyr::filter(n > 50)
+
+## Viz ----
+d_gini |> 
+  dplyr::filter(country == "US" | country == "UK" | country == "Germany" | country == "China" | country == "Korea" | country == "Sweden" | country == "Italy" | country == "Netherlands" | country == "Finland" | country == "France" | country == "Spain" | country == "Poland") |>
+  ggplot2::ggplot(aes(x = Age, y = Gini, color = Cohort, group = Cohort)) + 
+  ggplot2::geom_point(size = 2) + 
+  ggplot2::geom_line(size = 1.1) + 
+  ggplot2::facet_wrap(~ country) + 
+  ggplot2::theme_minimal(base_family = "SourceHanSans-Regular") + 
+  ggplot2::scale_y_continuous(limits = c(0.5, 1, 0.1)) + 
+  ggplot2::scale_color_manual(values = met.brewer("Klimt"))

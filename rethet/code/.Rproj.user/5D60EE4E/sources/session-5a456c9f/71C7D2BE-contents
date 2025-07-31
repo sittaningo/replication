@@ -1,0 +1,314 @@
+table(harmonized_longer$survey, harmonized_longer$survey_year, useNA = "always")
+table(harmonized_longer$raeducl, useNA = "always")
+table(harmonized_longer$household_capital_income, useNA = "always") |> View()
+
+harmonized_longer |> 
+  dplyr::mutate(inc = dplyr::if_else(household_capital_income < 0, 1, 0)) |> 
+  dplyr::summarise(inc = length(inc), .by = "survey")
+
+hist()
+
+harmonized_target |> dplyr::group_by(survey) |> count()
+
+
+table(harmonized_longer$survey, harmonized_longer$totalwealth, useNA = "always")
+
+table(harmonized_longer$survey, harmonized_longer$totalwealth, useNA = "always")
+
+harmonized_longer |> 
+  select(living_children, survey) |> 
+  dplyr::summarise(narate = sum(is.na(living_children)) / length(living_children), .by = survey)
+
+
+colnames(harmonized_longer)
+
+
+## SHARE ----
+hrs <- haven::read_dta(file = "../data/RAND_HRS/randhrs1992_2020v2.dta")
+mhas <- haven::read_dta(file = "../data/MHAS/H_MHAS_c2.dta")
+share <- haven::read_dta(file = "../data/SHARE/H_SHARE_f2.dta")
+elsa <- haven::read_dta(file = "../data/ELSA/h_elsa_g3.dta")
+klosa <- haven::read_dta(file = "../data/KLoSA/H_KLoSA_e2.dta")
+charls <- haven::read_dta(file = "../data/CHARLS/H_CHARLS_D_Data.dta")
+
+table(klosa$rabplace)
+
+table(hrs$hhid)
+table(mhas$unhhid)
+table(share$hhid)
+table(elsa$hh2hhid)
+table(klosa$hhid)
+table(charls$hhid)
+
+class(hrs$hhid)
+class(mhas$h2hhid)
+class(share$hhid)
+class(elsa$hh2hhid)
+class(klosa$hhid)
+class(charls$hhid)
+
+View(elsa)
+
+table(share$hh4hhres)
+table(harmonized_longer$survey, harmonized_longer$household_number)
+
+
+# table(TEST$survey, TEST$transfer_to_grandchildren)
+table(harmonized_longer$survey, harmonized_longer$subjective_health)
+
+# living_children -> ELSA
+# household_number -> SHARE
+# housing_value -> KLoSA
+# household_capital_income -> CHARLS/KLoSA
+
+harmonized_longer |> 
+  dplyr::summarise(mean(living_children, na.rm = TRUE), .by = survey)
+
+harmonized_longer |> 
+  dplyr::summarise(sum(is.na(living_children), na.rm = TRUE) / sum((is.na(living_children) + !is.na(living_children)), na.rm = TRUE), .by = survey)
+
+harmonized_longer |> 
+  dplyr::summarise(sum(is.na(weekly_working_hours), na.rm = TRUE) / sum((is.na(weekly_working_hours) + !is.na(weekly_working_hours)), na.rm = TRUE), .by = survey)
+
+# housing_value, household_capital_income, household_number, living_children
+# HwATOTB
+
+d <- harmonized_longer |> 
+  dplyr::filter(Age >= 60 & Age <= 89) |> 
+  dplyr::select(rabyear, Age, country, totalwealth, panelweight, survey_year)
+
+table(d$country, d$survey_year)  
+
+### Child co-reside ----
+# Any child co-reside with r/s
+# HwCORESD
+
+harmonized_longer <- harmonized |>
+  dplyr::select(survey, hhid, (starts_with("h") & ends_with("resdkn"))) |>
+  tidyr::pivot_longer(cols = (starts_with("h") & ends_with("resdkn")),
+                      names_to = "wave",
+                      values_to = "child_coresidence_a") |>
+  dplyr::mutate(wave = readr::parse_number(wave)) |>
+  dplyr::select(survey, hhid, wave, child_coresidence_a) |>
+  dplyr::distinct(pick(survey, hhid, wave), .keep_all = TRUE) |>
+  (\(.) dplyr::left_join(harmonized_longer, ., 
+                         by = c( "hhid", "survey", "wave"), 
+                         na_matches = "never"))()
+
+harmonized_longer <- harmonized |>
+  dplyr::select(id, (starts_with("r") & ends_with("coresd"))) |>
+  tidyr::pivot_longer(cols = (starts_with("r") & ends_with("coresd")),
+                      names_to = "wave",
+                      values_to = "child_coresidence_b") |>
+  dplyr::mutate(wave = readr::parse_number(wave)) |>
+  tidyr::drop_na(wave) |>
+  (\(.) dplyr::left_join(harmonized_longer, ., by = c("id", "wave")))()
+
+harmonized_longer <- harmonized_longer |>
+  dplyr::mutate(child_coresidence = dplyr::if_else(survey == "RAND_HRS", child_coresidence_b, child_coresidence_a)) |>
+  dplyr::select(-child_coresidence_a, -child_coresidence_b)
+
+### Child contact ----
+# Any weekly contact w/ children in person/phone/mail
+# RwKCNT
+
+harmonized_longer <- harmonized |> 
+  dplyr::select(id, (starts_with("r") & ends_with("kcnt"))) |> 
+  tidyr::pivot_longer(cols = (starts_with("r") & ends_with("kcnt")), 
+                      names_to = "wave",
+                      values_to = "child_contact_a") |> 
+  dplyr::mutate(wave = readr::parse_number(wave)) |> 
+  tidyr::drop_na(wave) |> 
+  (\(.) dplyr::left_join(harmonized_longer, ., by = c("id", "wave")))()
+
+harmonized_longer <- harmonized |>
+  dplyr::select(survey, hhid, (starts_with("h") & ends_with("kcnt"))) |>
+  tidyr::pivot_longer(cols = (starts_with("h") & ends_with("kcnt")),
+                      names_to = "wave",
+                      values_to = "child_contact_b") |>
+  dplyr::mutate(wave = readr::parse_number(wave)) |>
+  dplyr::select(survey, hhid, wave, child_contact_b) |>
+  dplyr::distinct(pick(survey, hhid, wave), .keep_all = TRUE) |>
+  (\(.) dplyr::left_join(harmonized_longer, ., 
+                         by = c( "hhid", "survey", "wave"), 
+                         na_matches = "never"))()
+
+
+harmonized_longer <- harmonized_longer |>
+  dplyr::mutate(child_contact = dplyr::if_else(survey == "RAND_HRS" | survey == "ELSA" | survey == "KLoSA", child_contact_a, child_contact_b)) |>
+  dplyr::select(-child_contact_a, -child_contact_b)
+
+### Child lives near ----
+# Any child lives near/ within 30 min/ in the same city
+# HwLVNEAR
+
+harmonized_longer <- harmonized |> 
+  dplyr::select(id, (starts_with("r") & ends_with("lvnear"))) |> 
+  tidyr::pivot_longer(cols = (starts_with("r") & ends_with("lvnear")), 
+                      names_to = "wave",
+                      values_to = "child_livenear_a") |> 
+  dplyr::mutate(wave = readr::parse_number(wave)) |> 
+  tidyr::drop_na(wave) |> 
+  (\(.) dplyr::left_join(harmonized_longer, ., by = c("id", "wave")))()
+
+harmonized_longer <- harmonized |>
+  dplyr::select(survey, hhid, (starts_with("h") & ends_with("lvnear"))) |>
+  tidyr::pivot_longer(cols = (starts_with("h") & ends_with("lvnear")),
+                      names_to = "wave",
+                      values_to = "child_livenear_b") |>
+  dplyr::mutate(wave = readr::parse_number(wave)) |>
+  dplyr::select(survey, hhid, wave, child_livenear_b) |>
+  dplyr::distinct(pick(survey, hhid, wave), .keep_all = TRUE) |>
+  (\(.) dplyr::left_join(harmonized_longer, ., 
+                         by = c( "hhid", "survey", "wave"), 
+                         na_matches = "never"))()
+
+
+harmonized_longer <- harmonized_longer |>
+  dplyr::mutate(child_livenear = dplyr::if_else(survey == "KLoSA", child_livenear_a, child_livenear_b)) |>
+  dplyr::select(-child_livenear_a, -child_livenear_b)
+
+
+harmonized_target |> reframe(length(is_retirement), .by = Age) |> View()
+
+X <- model.matrix(`Subjective Health` ~ `Birth cohort` + Age + Female + `Marital status` + `Number of living siblings` + `Survey year` + `Self-employment` + `Weekly working hours` + `Education` + `Number of Living Parents` + `Age(father)` + `Age(mother)` + `Total wealth` + `Household income` + `Transfer to grandchildren` + `Total household number` + `Number of living children`, data = harmonized_target)
+
+W <- harmonized_target |> dplyr::select(is_retirement) |> as.matrix()
+Y <- harmonized_target |> dplyr::select(`Subjective Health`) |> as.matrix()
+
+forest <- causal_forest(X, Y, W,
+                        sample.weights = harmonized_target$ipw,
+                        honesty = TRUE,
+                        min.node.size = 10000
+                        # treatment = harmonized_target$is_retirement, 
+                        # split.Rule = "CT", 
+                        # cv.option = "CT",
+                        # split.Honest = TRUE, cv.Honest = TRUE, split.Bucket = FALSE, 
+                        # maxdepth = 5,
+                        # minsplit = 9000, 
+                        # minbucket = 3000
+)
+
+# tree <- get_tree(forest, 1)
+# 
+# plot(tree)
+
+# Compute the leaf nodes the first five samples falls into.
+
+# leaf.nodes <- get_leaf_node(tree, X[1:5, ])
+
+# Saving a plot in .svg can be done with the `DiagrammeRsvg` package.
+# install.packages("DiagrammeRsvg")
+# install.packages("DiagrammeR")
+# tree.plot <- plot(tree)
+# cat(DiagrammeRsvg::export_svg(tree.plot), file = 'plot.svg')
+
+
+male <- harmonized_target |> dplyr::filter(Female == "Female")
+
+CausalTree_subjhealth <- htetree::causalTree(formula = `Subjective Health` ~ `Birth cohort` + Age + `Marital status` + `Number of living siblings` + `Survey year` + `Self-employment` + `Weekly working hours` + `Education` + `Number of Living Parents` + `Age(father)` + `Age(mother)` + `Total wealth` + `Household income` + `Transfer to grandchildren` + `Total household number` + `Number of living children`, 
+                                             data = male, 
+                                             weights = ipw,
+                                             treatment = male$is_retirement, 
+                                             split.Rule = "CT", 
+                                             cv.option = "CT",
+                                             split.Honest = TRUE, cv.Honest = TRUE, split.Bucket = FALSE, 
+                                             maxdepth = 4,
+                                             minsplit = 3000, 
+                                             minbucket = 1000)
+
+opcp <- CausalTree_subjhealth$cptable[,1][which.min((CausalTree_subjhealth$cptable[,4]))]
+opfit <- prune(CausalTree_subjhealth, opcp)
+
+rpart.plot(opfit, box.palette = met.brewer("OKeeffe2", direction = 1, type = "continuous"), family = "Noto Sans", digits = -3, cex = 1)
+
+### Primary Housing ----
+# These variables represent the total and net value of the respondents’ primary residence. The difference between the two is reflected by mortgages on the residential properties, which are also reported.
+# HwAHOUS
+
+harmonized_longer <- harmonized |>
+  dplyr::select(survey, hhid, (starts_with("h") & ends_with("ahous"))) |>
+  tidyr::pivot_longer(cols = (starts_with("h") & ends_with("ahous")),
+                      names_to = "wave",
+                      values_to = "housing_value_a") |>
+  dplyr::mutate(wave = readr::parse_number(wave)) |>
+  dplyr::select(survey, hhid, wave, housing_value_a) |> 
+  dplyr::distinct(pick(survey, hhid, wave), .keep_all = TRUE) |>
+  (\(.) dplyr::left_join(harmonized_longer, ., 
+                         by = c( "hhid", "survey", "wave"), 
+                         na_matches = "never"))()
+
+harmonized_longer <- harmonized |>
+  dplyr::select(id, (starts_with("r") & ends_with("ahous"))) |>
+  tidyr::pivot_longer(cols = (starts_with("r") & ends_with("ahous")),
+                      names_to = "wave",
+                      values_to = "housing_value_b") |>
+  dplyr::mutate(wave = readr::parse_number(wave)) |>
+  tidyr::drop_na(wave) |>
+  (\(.) dplyr::left_join(harmonized_longer, ., by = c("id", "wave")))()
+
+harmonized_longer <- harmonized_longer |>
+  dplyr::mutate(housing_value = dplyr::if_else(survey == "KLoSA", housing_value_b, housing_value_a)) |>
+  dplyr::select(-housing_value_a, -housing_value_b)
+
+# Confounder ----
+
+## Word Recall ----
+# Respondents are randomly assigned a list of 3-10 words and immediately asked to recall as many words from the list as possible (Immediate Word Recall). After a delay spent answering other survey questions, the respondent is then asked to recall as many words from that same 3-10 word list (Delayed Word Recall). Finally, a Total Word Recall Summary Score is computed from the respondent's scores for the Immediate and Delayed Word Recall tests.
+# RwTR20
+#TODO CONDUCT LATER!
+# !!MHASとKLoSAの取り扱いは要注意!!
+
+## Orientation to Time ----
+# Respondents are asked to report today's date, including day of the week, day of the month, month of the year, and year. Some studies also ask respondents to name the current season of the year (KloSA, TILDA). An Orientation to Time summary score is computed based on responses to the previous Orientation to Time questions.
+# RwORIENT
+
+# harmonized_longer <- harmonized |> 
+#   dplyr::select(id, (starts_with("r") & ends_with("orient"))) |> 
+#   tidyr::pivot_longer(cols = (starts_with("r") & ends_with("orient")), 
+#                       names_to = "wave",
+#                       values_to = "score_timeorientation") |> 
+#   dplyr::mutate(wave = readr::parse_number(wave)) |> 
+#   tidyr::drop_na(wave) |> 
+#   (\(.) dplyr::left_join(harmonized_longer, ., by = c("id", "wave")))()
+
+# ## All Public Pension Income ----
+# # This variable represents the annual individual income received from the government as any form of public pension.
+# # RwIPUBPEN
+# 
+# harmonized_longer <- harmonized |> 
+#   dplyr::select(id, (starts_with("r") & ends_with("ipubpen"))) |> 
+#   tidyr::pivot_longer(cols = (starts_with("r") & ends_with("ipubpen")), 
+#                       names_to = "wave",
+#                       values_to = "public_pension_income") |> 
+#   dplyr::mutate(wave = readr::parse_number(wave)) |> 
+#   tidyr::drop_na(wave) |> 
+#   (\(.) dplyr::left_join(harmonized_longer, ., by = c("id", "wave")))()
+# 
+# ## Individual Income from Other Government Transfers ----
+# # This variable represents the annual receipt of all the other individual incomes received from the government by the respondent which were not included in the other variables.
+# # RwIGXFR
+# #FIXME いらないかも、histがおかしすぎる
+# # hist(harmonized_longer$income_government_transfer)
+# 
+# harmonized_longer <- harmonized |> 
+#   dplyr::select(id, (starts_with("r") & ends_with("igxfr"))) |> 
+#   tidyr::pivot_longer(cols = (starts_with("r") & ends_with("igxfr")), 
+#                       names_to = "wave",
+#                       values_to = "income_government_transfer") |> 
+#   dplyr::mutate(wave = readr::parse_number(wave)) |> 
+#   tidyr::drop_na(wave) |> 
+#   (\(.) dplyr::left_join(harmonized_longer, ., by = c("id", "wave")))()
+# 
+
+#-----
+
+harmonized_longer |> 
+  dplyr::filter(survey_year >= 2017) |> 
+  dplyr::reframe(na = mean(!is.na(living_children) / (is.na(living_children) + !is.na(living_children))),
+                 .by = c(survey, survey_year))
+
+harmonized_longer |> glimpse()
+
+
+

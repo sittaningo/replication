@@ -1,0 +1,521 @@
+# Outcome----
+
+## Subjective Health ----
+harmonized_longer <- harmonized |> 
+  dplyr::select(id, survey, (starts_with("r") & ends_with("shlt"))) |> 
+  tidyr::pivot_longer(cols = (starts_with("r") & ends_with("shlt")), 
+                      names_to = "wave",
+                      values_to = "subjective_health"
+  ) |> 
+  dplyr::mutate(wave = readr::parse_number(wave)) |> 
+  tidyr::drop_na(wave)
+
+## ADL ----
+
+### Dress
+harmonized_longer <- harmonized |> 
+  dplyr::select(id, (starts_with("r") & ends_with("dressa"))) |> 
+  tidyr::pivot_longer(cols = (starts_with("r") & ends_with("dressa")), 
+                      names_to = "wave",
+                      values_to = "adl_dress") |> 
+  dplyr::mutate(wave = readr::parse_number(wave)) |> 
+  tidyr::drop_na(wave) |> 
+  (\(.) dplyr::left_join(harmonized_longer, ., by = c("id", "wave")))()
+
+harmonized_longer <- harmonized |> 
+  dplyr::select(id, (starts_with("r") & ends_with("dressb"))) |> 
+  tidyr::pivot_longer(cols = (starts_with("r") & ends_with("dressb")), 
+                      names_to = "wave",
+                      values_to = "adl_dressb") |> 
+  dplyr::mutate(wave = readr::parse_number(wave)) |> 
+  tidyr::drop_na(wave) |> 
+  (\(.) dplyr::left_join(harmonized_longer, ., by = c("id", "wave")))()
+
+### Bath
+harmonized_longer <- harmonized |> 
+  dplyr::select(id, (starts_with("r") & ends_with("batha"))) |> 
+  tidyr::pivot_longer(cols = (starts_with("r") & ends_with("batha")), 
+                      names_to = "wave",
+                      values_to = "adl_bath") |> 
+  dplyr::mutate(wave = readr::parse_number(wave)) |> 
+  tidyr::drop_na(wave) |> 
+  (\(.) dplyr::left_join(harmonized_longer, ., by = c("id", "wave")))()
+
+harmonized_longer <- harmonized |> 
+  dplyr::select(id, (starts_with("r") & ends_with("bathb"))) |> 
+  tidyr::pivot_longer(cols = (starts_with("r") & ends_with("bathb")), 
+                      names_to = "wave",
+                      values_to = "adl_bathb") |> 
+  dplyr::mutate(wave = readr::parse_number(wave)) |> 
+  tidyr::drop_na(wave) |> 
+  (\(.) dplyr::left_join(harmonized_longer, ., by = c("id", "wave")))()
+
+### Eating
+harmonized_longer <- harmonized |> 
+  dplyr::select(id, (starts_with("r") & ends_with("eata"))) |> 
+  tidyr::pivot_longer(cols = (starts_with("r") & ends_with("eata")), 
+                      names_to = "wave",
+                      values_to = "adl_eat") |> 
+  dplyr::mutate(wave = readr::parse_number(wave)) |> 
+  tidyr::drop_na(wave) |> 
+  (\(.) dplyr::left_join(harmonized_longer, ., by = c("id", "wave")))()
+
+harmonized_longer <- harmonized |> 
+  dplyr::select(id, (starts_with("r") & ends_with("eatb"))) |> 
+  tidyr::pivot_longer(cols = (starts_with("r") & ends_with("eatb")), 
+                      names_to = "wave",
+                      values_to = "adl_eatb") |> 
+  dplyr::mutate(wave = readr::parse_number(wave)) |> 
+  tidyr::drop_na(wave) |> 
+  (\(.) dplyr::left_join(harmonized_longer, ., by = c("id", "wave")))()
+
+### Toilet
+harmonized_longer <- harmonized |> 
+  dplyr::select(id, (starts_with("r") & ends_with("toilta"))) |> 
+  tidyr::pivot_longer(cols = (starts_with("r") & ends_with("toilta")), 
+                      names_to = "wave",
+                      values_to = "adl_toilet") |> 
+  dplyr::mutate(wave = readr::parse_number(wave)) |> 
+  tidyr::drop_na(wave) |> 
+  (\(.) dplyr::left_join(harmonized_longer, ., by = c("id", "wave")))()
+
+harmonized_longer <- harmonized |> 
+  dplyr::select(id, (starts_with("r") & ends_with("toiltb"))) |> 
+  tidyr::pivot_longer(cols = (starts_with("r") & ends_with("toiltb")), 
+                      names_to = "wave",
+                      values_to = "adl_toiletb") |> 
+  dplyr::mutate(wave = readr::parse_number(wave)) |> 
+  tidyr::drop_na(wave) |> 
+  (\(.) dplyr::left_join(harmonized_longer, ., by = c("id", "wave")))()
+
+### Combine Indices
+
+harmonized_longer <- harmonized_longer |> 
+  tidyr::pivot_longer(c(adl_dress, adl_bath, adl_eat, adl_toilet), 
+                      names_to = "adl_items", 
+                      values_to = "adl_a") |> 
+  dplyr::summarise(adl_a = sum(adl_a, na.rm = TRUE), .by = c(id, wave)) |> 
+  (\(.) dplyr::left_join(harmonized_longer, ., by = c("id", "wave")))()
+
+harmonized_longer <- harmonized_longer |> 
+  tidyr::pivot_longer(c(adl_dressb, adl_bathb, adl_eatb, adl_toiletb), 
+                      names_to = "adl_items", 
+                      values_to = "adl_b") |> 
+  dplyr::summarise(adl_b = sum(adl_b, na.rm = TRUE), .by = c(id, wave)) |> 
+  (\(.) dplyr::left_join(harmonized_longer, ., by = c("id", "wave")))()
+
+harmonized_longer <- harmonized_longer |> 
+  dplyr::mutate(adl = dplyr::if_else(survey == "KLoSA", adl_b, adl_a)) |> 
+  dplyr::select(-adl_dress, -adl_bath, -adl_eat, -adl_toilet, -adl_dressb, -adl_bathb, -adl_eatb, -adl_toiletb, -adl_a, -adl_b)
+
+## Survey year ----
+
+harmonized_longer <- harmonized_longer |> 
+  dplyr::full_join(wave_year_correspondence, by = c("survey", "wave"))
+
+# Treatment ----
+
+## Retirement ----
+# Retirement status and timing: These variables indicate whether the respondent is currently retired or not and the timing of their retirement.
+# RwRETEMP
+
+harmonized_longer <- harmonized |> 
+  dplyr::select(id, (starts_with("r") & ends_with("work"))) |> 
+  tidyr::pivot_longer(cols = (starts_with("r") & ends_with("work")), 
+                      names_to = "wave",
+                      values_to = "work") |> 
+  dplyr::mutate(wave = readr::parse_number(wave)) |> 
+  tidyr::drop_na(wave) |> 
+  (\(.) dplyr::left_join(harmonized_longer, ., by = c("id", "wave")))()
+
+harmonized_longer <- harmonized |> 
+  dplyr::select(id, (starts_with("r") & ends_with("retemp"))) |> 
+  tidyr::pivot_longer(cols = (starts_with("r") & ends_with("retemp")), 
+                      names_to = "wave",
+                      values_to = "subjective_retirement") |> 
+  dplyr::mutate(wave = readr::parse_number(wave)) |> 
+  tidyr::drop_na(wave) |> 
+  (\(.) dplyr::left_join(harmonized_longer, ., by = c("id", "wave")))()
+
+
+# Modifier ----
+
+## Birth date ----
+# Birth date variables capture the respondent’s birth year and month
+# RABYEAR
+
+harmonized_longer <- harmonized |> 
+  dplyr::select(id, rabyear) |> 
+  (\(.) dplyr::full_join(harmonized_longer, ., by = c("id")))()
+
+## Age at Interview ----
+
+harmonized_longer <- harmonized_longer |> 
+  dplyr::mutate(Age = survey_year - rabyear)
+
+## Gender ----
+
+harmonized_longer <- harmonized |> 
+  dplyr::select(id, ragender) |> 
+  (\(.) dplyr::left_join(harmonized_longer, ., by = c("id")))()
+
+## Harmonized Education ----
+# This variable indicates the harmonized education level
+# RAEDUCL
+
+harmonized_longer <- harmonized |> 
+  dplyr::select(id, raeducl) |> 
+  (\(.) dplyr::left_join(harmonized_longer, ., by = c("id")))()
+
+
+## Current marital status ----
+# Current marital status variables capture the current marital status and length of the current marriage.
+# RwMSTAT
+
+harmonized_longer <- harmonized |> 
+  dplyr::select(id, (starts_with("r") & ends_with("mstat"))) |> 
+  tidyr::pivot_longer(cols = (starts_with("r") & ends_with("mstat")), 
+                      names_to = "wave",
+                      values_to = "marital_status") |> 
+  dplyr::mutate(wave = readr::parse_number(wave)) |> 
+  tidyr::drop_na(wave) |> 
+  (\(.) dplyr::left_join(harmonized_longer, ., by = c("id", "wave")))()
+
+harmonized_longer <- harmonized_longer |> 
+  dplyr::mutate(marital_status = case_match(marital_status, 
+                                            1:2 ~ 1L, 
+                                            3 ~ 2L, 
+                                            4:6 ~ 3L, 
+                                            7 ~ 4L, 
+                                            8 ~ 5L, 
+                                            .default = NA_integer_))
+
+## Living siblings ----
+# These variables indicate the number of the respondent’s living siblings.
+# RwLIVSIB
+
+harmonized_longer <- harmonized |> 
+  dplyr::select(id, (starts_with("r") & ends_with("livsib"))) |> 
+  tidyr::pivot_longer(cols = (starts_with("r") & ends_with("livsib")), 
+                      names_to = "wave",
+                      values_to = "living_siblings") |> 
+  dplyr::mutate(wave = readr::parse_number(wave)) |> 
+  tidyr::drop_na(wave) |> 
+  (\(.) dplyr::left_join(harmonized_longer, ., by = c("id", "wave")))()
+
+## Whether self-employed ----
+# These variables indicate whether the respondent is currently self-employed as their current main job
+# RwSLFEMP
+
+harmonized_longer <- harmonized |> 
+  dplyr::select(id, (starts_with("r") & ends_with("slfemp"))) |> 
+  tidyr::pivot_longer(cols = (starts_with("r") & ends_with("slfemp")), 
+                      names_to = "wave",
+                      values_to = "is_selfemployed") |> 
+  dplyr::mutate(wave = readr::parse_number(wave)) |> 
+  tidyr::drop_na(wave) |> 
+  (\(.) dplyr::left_join(harmonized_longer, ., by = c("id", "wave")))()
+
+## Hours of work per week at main job ----
+# These variables represent the usual number of hours per week the respondent works at their main job.
+# RwJHOURS
+
+harmonized_longer <- harmonized |> 
+  dplyr::select(id, (starts_with("r") & ends_with("jhours"))) |> 
+  tidyr::pivot_longer(cols = (starts_with("r") & ends_with("jhours")), 
+                      names_to = "wave",
+                      values_to = "weekly_working_hours_a") |> 
+  dplyr::mutate(wave = readr::parse_number(wave)) |> 
+  tidyr::drop_na(wave) |> 
+  (\(.) dplyr::left_join(harmonized_longer, ., by = c("id", "wave")))()
+
+harmonized_longer <- harmonized |> 
+  dplyr::select(id, (starts_with("r") & ends_with("jhours_c"))) |> 
+  tidyr::pivot_longer(cols = (starts_with("r") & ends_with("jhours_c")), 
+                      names_to = "wave",
+                      values_to = "weekly_working_hours_b") |> 
+  dplyr::mutate(wave = readr::parse_number(wave)) |> 
+  tidyr::drop_na(wave) |> 
+  (\(.) dplyr::left_join(harmonized_longer, ., by = c("id", "wave")))()
+
+harmonized_longer <- harmonized_longer |>
+  dplyr::mutate(weekly_working_hours = dplyr::if_else(survey == "CHARLS", weekly_working_hours_b, weekly_working_hours_a)) |>
+  dplyr::select(-weekly_working_hours_a, -weekly_working_hours_b)
+
+
+## Number of living parents ----
+# Living parents: These variables indicate the respondent’s number of the living parents
+# RwLIVPAR
+
+harmonized_longer <- harmonized |> 
+  dplyr::select(id, (starts_with("r") & ends_with("livpar"))) |> 
+  tidyr::pivot_longer(cols = (starts_with("r") & ends_with("livpar")), 
+                      names_to = "wave",
+                      values_to = "num_livparents") |> 
+  dplyr::mutate(wave = readr::parse_number(wave)) |> 
+  tidyr::drop_na(wave) |> 
+  (\(.) dplyr::left_join(harmonized_longer, ., by = c("id", "wave")))()
+
+## Father's age - current/at death ----
+# Parents' age/age at death: These variables indicate the respondent’s parents’ current age in years if the parents are still alive or the respondent’s parents’ age at death
+# RwDADAGE
+
+harmonized_longer <- harmonized |> 
+  dplyr::select(id, (starts_with("r") & ends_with("dadage"))) |> 
+  tidyr::pivot_longer(cols = (starts_with("r") & ends_with("dadage")), 
+                      names_to = "wave",
+                      values_to = "father_age") |> 
+  dplyr::mutate(wave = readr::parse_number(wave)) |> 
+  tidyr::drop_na(wave) |> 
+  (\(.) dplyr::left_join(harmonized_longer, ., by = c("id", "wave")))()
+
+## Mother's age - current/at death ----
+# Parents' age/age at death: These variables indicate the respondent’s parents’ current age in years if the parents are still alive or the respondent’s parents’ age at death
+# RwDADAGE
+
+harmonized_longer <- harmonized |> 
+  dplyr::select(id, (starts_with("r") & ends_with("momage"))) |> 
+  tidyr::pivot_longer(cols = (starts_with("r") & ends_with("momage")), 
+                      names_to = "wave",
+                      values_to = "mother_age") |> 
+  dplyr::mutate(wave = readr::parse_number(wave)) |> 
+  tidyr::drop_na(wave) |> 
+  (\(.) dplyr::left_join(harmonized_longer, ., by = c("id", "wave")))()
+
+## Country ----
+# Parents' age/age at death: These variables indicate the respondent’s parents’ current age in years if the parents are still alive or the respondent’s parents’ age at death
+# RwDADAGE
+
+harmonized_longer <- harmonized |> 
+  dplyr::select(id, survey, isocountry) |> 
+  dplyr::mutate(country = dplyr::case_when(survey == "RAND_HRS" ~ "US", 
+                                           survey == "ELSA" ~ "UK", 
+                                           survey == "MHAS" ~ "Mexico", 
+                                           survey == "KLoSA" ~ "Korea", 
+                                           survey == "CHARLS" ~ "China", 
+                                           isocountry == 40L ~ "Austria", 
+                                           isocountry == 56L ~ "Belgium", 
+                                           isocountry == 100L ~ "Bulgaria", 
+                                           isocountry == 191L ~ "Croatia", 
+                                           isocountry == 196L ~ "Cyprus", 
+                                           isocountry == 203L ~ "Czech Republic", 
+                                           isocountry == 208L ~ "Denmark", 
+                                           isocountry == 233L ~ "Estonia", 
+                                           isocountry == 246L ~ "Finland", 
+                                           isocountry == 250L ~ "France", 
+                                           isocountry == 276L ~ "Germany", 
+                                           isocountry == 300L ~ "Greece", 
+                                           isocountry == 348L ~ "Hungary", 
+                                           isocountry == 372L ~ "Ireland", 
+                                           isocountry == 376L ~ "Israel", 
+                                           isocountry == 380L ~ "Italy", 
+                                           isocountry == 428L ~ "Latvia", 
+                                           isocountry == 440L ~ "Lithuania", 
+                                           isocountry == 442L ~ "Luxembourg", 
+                                           isocountry == 470L ~ "Malta", 
+                                           isocountry == 528L ~ "Netherlands", 
+                                           isocountry == 616L ~ "Poland", 
+                                           isocountry == 620L ~ "Portugal", 
+                                           isocountry == 642L ~ "Romania", 
+                                           isocountry == 703L ~ "Slovakia", 
+                                           isocountry == 705L ~ "Slovenia", 
+                                           isocountry == 724L ~ "Spain", 
+                                           isocountry == 752L ~ "Sweden", 
+                                           isocountry == 756L ~ "Switzerland")) |> 
+  dplyr::select(-survey, -isocountry) |> 
+  (\(.) dplyr::left_join(harmonized_longer, ., by = c("id")))()
+
+## Household ----
+
+harmonized_longer <- harmonized |>
+  dplyr::select(id, survey, hhid) |>
+  (\(.) dplyr::left_join(harmonized_longer, ., by = c("id", "survey")))()
+
+### Total wealth ----
+# These variables represent the total and net value of the respondents’ primary residence. The difference between the two is reflected by mortgages on the residential properties, which are also reported.
+# HwAHOUS
+
+harmonized_longer <- harmonized |>
+  dplyr::select(survey, hhid, (starts_with("h") & ends_with("atotb"))) |>
+  tidyr::pivot_longer(cols = (starts_with("h") & ends_with("atotb")),
+                      names_to = "wave",
+                      values_to = "totalwealth_a") |>
+  dplyr::mutate(wave = readr::parse_number(wave)) |>
+  dplyr::select(survey, hhid, wave, totalwealth_a) |> 
+  dplyr::distinct(pick(survey, hhid, wave), .keep_all = TRUE) |>
+  (\(.) dplyr::left_join(harmonized_longer, ., 
+                         by = c( "hhid", "survey", "wave"), 
+                         na_matches = "never"))()
+
+harmonized_longer <- harmonized |>
+  dplyr::select(survey, hhid, (starts_with("hh") & ends_with("atotb"))) |>
+  tidyr::pivot_longer(cols = (starts_with("hh") & ends_with("atotb")),
+                      names_to = "wave",
+                      values_to = "totalwealth_b") |>
+  dplyr::mutate(wave = readr::parse_number(wave)) |>
+  dplyr::select(survey, hhid, wave, totalwealth_b) |> 
+  dplyr::distinct(pick(survey, hhid, wave), .keep_all = TRUE) |>
+  (\(.) dplyr::left_join(harmonized_longer, ., 
+                         by = c( "hhid", "survey", "wave"), 
+                         na_matches = "never"))()
+
+harmonized_longer <- harmonized |>
+  dplyr::select(id, (starts_with("r") & ends_with("atotb"))) |>
+  tidyr::pivot_longer(cols = (starts_with("r") & ends_with("atotb")),
+                      names_to = "wave",
+                      values_to = "totalwealth_c") |>
+  dplyr::mutate(wave = readr::parse_number(wave)) |>
+  tidyr::drop_na(wave) |>
+  (\(.) dplyr::left_join(harmonized_longer, ., by = c("id", "wave")))()
+
+harmonized_longer <- harmonized |>
+  dplyr::select(id, (starts_with("s") & ends_with("atotb"))) |>
+  tidyr::pivot_longer(cols = (starts_with("s") & ends_with("atotb")),
+                      names_to = "wave",
+                      values_to = "totalwealth_d") |>
+  dplyr::mutate(wave = readr::parse_number(wave)) |>
+  tidyr::drop_na(wave) |>
+  (\(.) dplyr::left_join(harmonized_longer, ., by = c("id", "wave")))()
+
+harmonized_longer <- harmonized_longer |> 
+  tidyr::replace_na(list(totalwealth_c = 0, totalwealth_d = 0)) |> 
+  dplyr::mutate(totalwealth_e = totalwealth_c + totalwealth_d) |> 
+  dplyr::select(-totalwealth_c, -totalwealth_d)
+
+harmonized_longer <- harmonized_longer |>
+  dplyr::mutate(totalwealth = dplyr::case_when(survey == "CHARLS" & (wave == 1 | wave == 2) ~ totalwealth_b, 
+                                               survey == "KLoSA" ~ totalwealth_e, 
+                                               TRUE ~ totalwealth_a)) |>
+  dplyr::select(-totalwealth_a, -totalwealth_b, -totalwealth_e)
+
+### Household Capital Income ----
+# These variables represent the capital incomes of the respondents’ households.
+# HwICAP
+
+harmonized_longer <- harmonized |>
+  dplyr::select(survey, hhid, (starts_with("h") & ends_with("icap"))) |>
+  tidyr::pivot_longer(cols = (starts_with("h") & ends_with("icap")),
+                      names_to = "wave",
+                      values_to = "household_capital_income_a") |>
+  dplyr::mutate(wave = readr::parse_number(wave)) |>
+  dplyr::select(survey, hhid, wave, household_capital_income_a) |>
+  dplyr::distinct(pick(survey, hhid, wave), .keep_all = TRUE) |>
+  (\(.) dplyr::left_join(harmonized_longer, ., 
+                         by = c( "hhid", "survey", "wave"), 
+                         na_matches = "never"))()
+
+harmonized_longer <- harmonized |>
+  dplyr::select(id, (starts_with("r") & ends_with("icap"))) |>
+  tidyr::pivot_longer(cols = (starts_with("r") & ends_with("icap")),
+                      names_to = "wave",
+                      values_to = "household_capital_income_b") |>
+  dplyr::mutate(wave = readr::parse_number(wave)) |>
+  (\(.) dplyr::left_join(harmonized_longer, ., by = c("id", "wave")))()
+
+harmonized_longer <- harmonized |>
+  dplyr::select(hhid, survey, (starts_with("hh") & ends_with("icap"))) |>
+  tidyr::pivot_longer(cols = (starts_with("hh") & ends_with("icap")),
+                      names_to = "wave",
+                      values_to = "household_capital_income_c") |>
+  dplyr::mutate(wave = readr::parse_number(wave)) |>
+  dplyr::select(hhid, survey, wave, household_capital_income_c) |>
+  dplyr::distinct(pick(hhid, survey, wave), .keep_all = TRUE) |>
+  (\(.) dplyr::left_join(harmonized_longer, ., 
+                         by = c( "hhid", "survey", "wave"), 
+                         na_matches = "never"))()
+
+harmonized_longer <- harmonized |>
+  dplyr::select(hhid, survey, (starts_with("h") & ends_with("ittot"))) |>
+  tidyr::pivot_longer(cols = (starts_with("h") & ends_with("ittot")),
+                      names_to = "wave",
+                      values_to = "household_capital_income_d") |>
+  dplyr::mutate(wave = readr::parse_number(wave)) |>
+  dplyr::select(hhid, survey, wave, household_capital_income_d) |>
+  dplyr::distinct(pick(hhid, survey, wave), .keep_all = TRUE) |>
+  (\(.) dplyr::left_join(harmonized_longer, ., 
+                         by = c( "hhid", "survey", "wave"), 
+                         na_matches = "never"))()
+
+harmonized_longer <- harmonized_longer |>
+  dplyr::mutate(household_capital_income = dplyr::case_when(survey == "KLoSA" ~ household_capital_income_b,
+                                                            survey == "CHARLS" ~ household_capital_income_c,
+                                                            survey == "SHARE" ~ household_capital_income_d,
+                                                            TRUE ~ household_capital_income_a)) |>
+  dplyr::select(-household_capital_income_a, -household_capital_income_b, -household_capital_income_c, -household_capital_income_d)
+
+### Transfers to children/grandchildren ----
+# These variables provide information about any financial help the respondent gave their children or grandchildren.
+# HwTCANY
+
+harmonized_longer <- harmonized |>
+  dplyr::select(survey, hhid, (starts_with("h") & ends_with("tcany"))) |>
+  tidyr::pivot_longer(cols = (starts_with("h") & ends_with("tcany")),
+                      names_to = "wave",
+                      values_to = "transfer_to_grandchildren") |>
+  dplyr::mutate(wave = readr::parse_number(wave)) |>
+  dplyr::select(survey, hhid, wave, transfer_to_grandchildren) |>
+  dplyr::distinct(pick(survey, hhid, wave), .keep_all = TRUE) |>
+  (\(.) dplyr::left_join(harmonized_longer, ., 
+                         by = c( "hhid", "survey", "wave"), 
+                         na_matches = "never"))()
+
+### Number of people ----
+# These variables indicate the number of people living in the household, including the respondents.
+# HwHHRES
+
+harmonized_longer <- harmonized |>
+  dplyr::select(survey, hhid, (starts_with("h") & ends_with("hhres"))) |>
+  tidyr::pivot_longer(cols = (starts_with("h") & ends_with("hhres")),
+                      names_to = "wave",
+                      values_to = "household_number_a") |>
+  dplyr::mutate(wave = readr::parse_number(wave)) |>
+  dplyr::select(survey, hhid, wave, household_number_a) |>
+  dplyr::distinct(pick(survey, hhid, wave), .keep_all = TRUE) |>
+  (\(.) dplyr::left_join(harmonized_longer, ., 
+                         by = c( "hhid", "survey", "wave"), 
+                         na_matches = "never"))()
+
+harmonized_longer <- harmonized |>
+  dplyr::select(survey, hhid, (starts_with("hh") & ends_with("hhres"))) |>
+  tidyr::pivot_longer(cols = (starts_with("hh") & ends_with("hhres")),
+                      names_to = "wave",
+                      values_to = "household_number_b") |>
+  dplyr::mutate(wave = readr::parse_number(wave)) |>
+  dplyr::select(survey, hhid, wave, household_number_b) |>
+  dplyr::distinct(pick(survey, hhid, wave), .keep_all = TRUE) |>
+  (\(.) dplyr::left_join(harmonized_longer, ., 
+                         by = c( "hhid", "survey", "wave"), 
+                         na_matches = "never"))()
+
+harmonized_longer <- harmonized_longer |>
+  dplyr::mutate(household_number = dplyr::if_else(survey == "SHARE", household_number_b, household_number_a)) |>
+  dplyr::select(-household_number_a, -household_number_b)
+
+### Living children ----
+# These variables indicate the number of living children of the respondent and his/her spouse or partner.
+# HwCHILD
+
+harmonized_longer <- harmonized |>
+  dplyr::select(survey, hhid, (starts_with("h") & ends_with("child"))) |>
+  tidyr::pivot_longer(cols = (starts_with("h") & ends_with("child")),
+                      names_to = "wave",
+                      values_to = "living_children_a") |>
+  dplyr::mutate(wave = readr::parse_number(wave)) |>
+  dplyr::select(survey, hhid, wave, living_children_a) |>
+  dplyr::distinct(pick(survey, hhid, wave), .keep_all = TRUE) |>
+  (\(.) dplyr::left_join(harmonized_longer, ., 
+                         by = c( "hhid", "survey", "wave"), 
+                         na_matches = "never"))()
+
+harmonized_longer <- harmonized |>
+  dplyr::select(id, (starts_with("r") & ends_with("child"))) |>
+  tidyr::pivot_longer(cols = (starts_with("r") & ends_with("child")),
+                      names_to = "wave",
+                      values_to = "living_children_b") |>
+  dplyr::mutate(wave = readr::parse_number(wave)) |>
+  tidyr::drop_na(wave) |>
+  (\(.) dplyr::left_join(harmonized_longer, ., by = c("id", "wave")))()
+
+harmonized_longer <- harmonized_longer |>
+  dplyr::mutate(living_children = dplyr::if_else(survey == "ELSA", living_children_b, living_children_a)) |>
+  dplyr::select(-living_children_a, -living_children_b)

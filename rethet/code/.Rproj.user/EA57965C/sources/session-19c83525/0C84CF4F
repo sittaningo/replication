@@ -1,0 +1,28 @@
+{
+    "id": "0C84CF4F",
+    "path": "~/work/code/6_ModelEstimation.R",
+    "project_path": "6_ModelEstimation.R",
+    "type": "r_source",
+    "hash": "2348666557",
+    "contents": "",
+    "dirty": false,
+    "created": 1726318739405.0,
+    "source_on_save": false,
+    "relative_order": 6,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "38,302",
+        "scrollLine": "26",
+        "softWrapLines": "true",
+        "docOutlineVisible": "1"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1730004750,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1730004750449,
+    "read_only": false,
+    "read_only_alternatives": []
+}

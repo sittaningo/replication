@@ -1,0 +1,39 @@
+# Construct an time level ----
+#TODO 2回以上引退している者の取り扱い
+#TODO 1->0の引退をたどるものの扱い(id=3)
+# retirementが0→1のときに1をフラグする
+
+harmonized_longer <- harmonized_longer |> 
+  dplyr::select(-score_timeorientation) |> 
+  dplyr::group_by(id) |> 
+  dplyr::mutate(lagged_retirement = lag(retirement)) |> 
+  dplyr::mutate(is_retirement = dplyr::if_else(lagged_retirement == 0 & retirement == 1, 1, 0)) |> 
+  dplyr::select(-lagged_retirement) |> 
+  dplyr::mutate(subjective_health_lead = dplyr::lead(subjective_health), 
+                across(.cols = c(subjective_health, rabyear, age_at_interview, ragender, marital_status, public_pension_income, income_government_transfer, living_siblings, is_selfemployed, weekly_working_hours), 
+                       .fns = ~ dplyr::lag(.x))
+                ) |> 
+  dplyr::ungroup()
+
+# Restrict the TP to those who retired from t-1 to t+1
+harmonized_target <- harmonized_longer |> 
+  dplyr::select(-retirement, -age_at_interview) |> 
+  drop_na()
+
+#/ # of individual = 29919
+# t+1時点の健康とt-1時点のcovariatesをすべて収集している者
+
+# Divide all sample into training sample and test sample
+
+set.seed(777)
+split <- sample(c(0, 1), size = 29919, replace = TRUE) |> tidyr::as_tibble()
+
+harmonized_train <- harmonized_longer |> 
+  dplyr::bind_rows(split) |> 
+  dplyr::filter(value == 0) |> 
+  dplyr::select(-value)
+
+harmonized_test <- harmonized_longer |> 
+  dplyr::bind_rows(split) |> 
+  dplyr::filter(value == 1) |> 
+  dplyr::select(-value)

@@ -1,0 +1,79 @@
+# Person-year ----
+
+harmonized_longer <- harmonized_longer |> 
+  dplyr::filter((survey == "RAND_HRS" & wave <= 14) | 
+                  (survey == "MHAS" & wave >= 3 & wave <= 5) | 
+                  (survey == "SHARE" & wave <= 8) | 
+                  (survey == "ELSA" & wave <= 9) | 
+                  (survey == "CHARLS" & wave <= 4) | 
+                  (survey == "KLoSA" & wave <= 7))
+
+# Construct an time level ----
+#TODO 2回以上引退している者の取り扱い
+#TODO 1->0の引退をたどるものの扱い(id=3)
+# retirementが0→1のときに1をフラグする
+
+harmonized_longer <- harmonized_longer |> 
+  dplyr::group_by(id) |> 
+  dplyr::mutate(lagged_work = lag(work)) |> 
+  dplyr::mutate(is_retirement = dplyr::if_else(lagged_work == 1 & work == 0, 1, 0)) |> 
+  dplyr::select(-lagged_work) |> 
+  dplyr::mutate(subjective_health_lead = dplyr::lead(subjective_health), 
+                adl_lead = dplyr::lead(adl), 
+                across(.cols = c(subjective_health, rabyear, Age, survey_year, ragender, raeducl, survey, marital_status, living_siblings, is_selfemployed, weekly_working_hours, num_livparents, father_age, mother_age, totalwealth, household_capital_income, transfer_to_grandchildren, household_number, living_children), 
+                       .fns = ~ dplyr::lag(.x))
+  ) |> 
+  dplyr::ungroup()
+
+# , housing_value, household_capital_income, transfer_to_grandchildren, household_number, living_children, public_pension_income, income_government_transfer
+
+# Restrict the TP to those who retired from t-1 to t+1
+harmonized_target <- harmonized_longer |> 
+  dplyr::select(subjective_health_lead, is_retirement, subjective_health, rabyear, Age, survey_year, ragender, raeducl, survey, marital_status, living_siblings, is_selfemployed, weekly_working_hours, num_livparents, father_age, mother_age, totalwealth, household_capital_income, transfer_to_grandchildren, household_number, living_children, country) |> 
+  drop_na() |> 
+  dplyr::filter(Age >= 50)
+
+#/ # of individual = 30920
+# t+1時点の健康とt-1時点のcovariatesをすべて収集している者
+
+harmonized_target <- harmonized_target |> 
+  dplyr::mutate(ragender = ragender - 1, 
+                ragender = fct_recode(factor(ragender), "Female" = "1", "Male" = "0"), 
+                marital_status = fct_recode(factor(marital_status), "Married" = "1", "Partnered" = "2", "Separated/Divorced" = "3", "Widowed" = "4", "Never married" = "5"), 
+                raeducl = fct_recode(factor(raeducl), "Less than upper secondary" = "1", "Upper secondary and vocational training" = "2", "Tertiary" = "3"), 
+                income_percentile = ntile(household_capital_income, 100), 
+                wealth_percentile = ntile(totalwealth, 100)
+  ) |> 
+  dplyr::filter(income_percentile > 1 & income_percentile < 100 & wealth_percentile > 1 & wealth_percentile < 100) |> 
+  dplyr::rename(`Subjective Health` = subjective_health_lead, 
+                Female = ragender, 
+                `Birth cohort` = rabyear, 
+                `Marital status` = marital_status, 
+                `Number of living siblings` = living_siblings, 
+                `Survey year` = survey_year, 
+                `Self-employment` = is_selfemployed, 
+                `Weekly working hours` = weekly_working_hours, 
+                `Education` = raeducl, 
+                `Number of Living Parents` = num_livparents,
+                `Age(father)` = father_age, 
+                `Age(mother)` = mother_age, 
+                `Household income` = household_capital_income, 
+                `Total wealth` = totalwealth, 
+                `Transfer to grandchildren` = transfer_to_grandchildren, 
+                `Total household number` = household_number, 
+                `Number of living children` = living_children)
+
+
+# Divide all sample into training sample and test sample
+
+# set.seed(777)
+# harmonized_target <- harmonized_target |> 
+#   dplyr::mutate(split = sample(c(0, 1), size = 30920, replace = TRUE))
+# 
+# harmonized_train <- harmonized_target |> 
+#   dplyr::filter(split == 0) |> 
+#   dplyr::select(-split)
+# 
+# harmonized_test <- harmonized_target |> 
+#   dplyr::filter(split == 1) |> 
+#   dplyr::select(-split)

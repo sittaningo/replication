@@ -1,0 +1,18 @@
+# Rename Features ----
+
+harmonized_target <- harmonized_target |> 
+  dplyr::mutate(ragender = ragender - 1, 
+                ragender = fct_recode(factor(ragender), "Female" = "1", "Male" = "0"), 
+                marital_status = fct_recode(factor(marital_status), "Married" = "1", "Married, spouse absent" = "2", "Partnered" = "3", "Separated" = "4", "Divorced" = "5", "Widowed" = "7", "Never married" = "8")
+                ) |> 
+  dplyr::rename(`Subjective Health` = subjective_health_lead, 
+                Female = ragender, 
+                `Birth cohort` = rabyear, 
+                `Public pension income` = public_pension_income, 
+                `Individual income from other government transfers` = income_government_transfer,
+                `Marital status` = marital_status, 
+                `Number of living siblings` = living_siblings
+                )
+
+DescriptiveStatistics <- harmonized_target |> 
+  (\(.)modelsummary::datasummary(subjective_health_lead + is_retirement + ragender + rabyear + marital_status + public_pension_income + income_government_transfer + living_siblings + is_selfemployed + weekly_working_hours + subjective_health ~ 1 + Percent() + Mean + SD + min + max, data = ., output = 'markdown'))()
